@@ -99,9 +99,9 @@
 4. Запусти на устройстве или эмуляторе (API 29+)
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/MediaWave.git
+git clone https://github.com/vadf34/MediaWave.git
 cd MediaWave
-./gradlew assembleDebug
+gradle assembleDebug
 ```
 
 ---
