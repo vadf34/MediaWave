@@ -29,22 +29,17 @@ jobs:
 
       - name: Build Debug APK
         run: gradle assembleDebug
-        working-directory: MediaWave
 
       - name: Build Release APK
         run: gradle assembleRelease
-        working-directory: MediaWave
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: MediaWave-debug
-          path: MediaWave/app/build/outputs/apk/debug/*.apk
-          retention-days: 30
 
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
           name: MediaWave-release
-          path: MediaWave/app/build/outputs/apk/release/*.apk
+          path: app/build/outputs/apk/release/*.apk
           retention-days: 30
