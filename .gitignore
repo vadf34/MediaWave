@@ -1,0 +1,37 @@
+# Android
+*.iml
+.gradle/
+local.properties
+/.idea/
+.DS_Store
+/build/
+/captures/
+.externalNativeBuild/
+.cxx/
+
+# App build outputs
+app/build/
+app/release/
+
+# Gradle
+gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# Keys — never commit!
+*.keystore
+*.jks
+keystore.properties
+
+# IntelliJ / Android Studio
+*.iws
+out/
+
+# macOS
+.DS_Store
+__MACOSX/
+
+# Linux
+*~
+
+# Windows
+Thumbs.db

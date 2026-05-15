@@ -1,0 +1,4 @@
+-keep class com.yausername.** { *; }
+-keep class com.mediawave.downloader.data.model.** { *; }
+-dontwarn com.yausername.**
+-keep class org.schabi.** { *; }
