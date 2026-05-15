@@ -28,7 +28,7 @@ jobs:
           gradle-version: '8.6'
 
       - name: Build Release APK
-        run: gradle assembleRelease
+        run: gradlew assembleDebug
 
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
