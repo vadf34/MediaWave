@@ -9,6 +9,8 @@
 ![Android](https://img.shields.io/badge/Android-10%2B-brightgreen?logo=android)
 ![Version](https://img.shields.io/badge/Версия-1.0.0-blue)
 ![Kotlin](https://img.shields.io/badge/Kotlin-Jetpack%20Compose-purple?logo=kotlin)
+[![Download APK](https://img.shields.io/badge/Скачать-APK-green?style=flat&logo=android)](https://github.com/vadf34/MediaWave/releases/latest)
+
 
 </div>
 
