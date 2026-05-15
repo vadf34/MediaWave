@@ -25,14 +25,14 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
-          gradle-version: '8.6'
+          gradle-version: '8.3'
 
-      - name: Build Release APK
-        run: gradlew assembleDebug
+      - name: Build Debug APK
+        run: gradle assembleDebug
 
-      - name: Upload Release APK
+      - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: MediaWave-release
-          path: app/build/outputs/apk/release/*.apk
+          name: MediaWave-debug
+          path: app/build/outputs/apk/debug/*.apk
           retention-days: 30
