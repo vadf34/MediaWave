@@ -21,19 +21,19 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: gradle
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.6'
 
       - name: Build Debug APK
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: assembleDebug
-          build-root-directory: MediaWave
+        run: gradle assembleDebug
+        working-directory: MediaWave
 
       - name: Build Release APK
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: assembleRelease
-          build-root-directory: MediaWave
+        run: gradle assembleRelease
+        working-directory: MediaWave
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
