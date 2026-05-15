@@ -134,8 +134,8 @@ app/src/main/java/com/mediawave/downloader/
 
 ---
 
-## ☕ Підтримка проекту
-Якщо тобі подобається **MediaWave** і ти хочеш підтримати розробку, це можна зробити тут:
+## ☕ Поддержка проекта
+Если тебе нравится MediaWave и ты хочешь поддержать разработку, это можно сделать здесь:
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/nexid)
 
@@ -143,7 +143,7 @@ app/src/main/java/com/mediawave/downloader/
 
 ![USDT](https://img.shields.io/badge/USDT%20(TRC20)-26A17B?style=for-the-badge&logo=tether&logoColor=white) `TQfyjiAByrvJDke6dGgvzC8NN8TKifkCMY`
 
-Будь-яка підтримка мотивує виправляти баги швидше! ✨
+Любая поддержка мотивирует исправлять баги побыстрее! ✨
 
 
 
