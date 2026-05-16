@@ -48,6 +48,19 @@ class HomeViewModel @Inject constructor(
             val version = downloadManager.getYtdlpVersion()
             _uiState.update { it.copy(ytdlpVersion = version) }
         }
+        // Auto-update yt-dlp on first launch
+        viewModelScope.launch(Dispatchers.IO) {
+            val isFirstLaunch = prefs.isFirstLaunchFlow.first()
+            if (isFirstLaunch) {
+                _uiState.update { it.copy(isUpdatingYtdlp = true) }
+                downloadManager.updateYtdlp { newVersion ->
+                    viewModelScope.launch { prefs.setYtdlpVersion(newVersion) }
+                }
+                prefs.setFirstLaunch(false)
+                val version = downloadManager.getYtdlpVersion()
+                _uiState.update { it.copy(isUpdatingYtdlp = false, ytdlpVersion = version) }
+            }
+        }
     }
 
     fun onUrlChange(url: String) {
