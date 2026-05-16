@@ -236,13 +236,13 @@ private fun CookieStatusBadge(
     if (url.isBlank()) return
 
     val matchedCookie = remember(url, cookies) {
-        fun domainOf(raw: String) = raw
-            .removePrefix("https://").removePrefix("http://")
-            .trimEnd('/').substringBefore('/')
+        // Use root domain (last two labels) so subdomains like "vt.tiktok.com"
+        // match a profile stored as "www.tiktok.com" or "tiktok.com".
+        fun rootDomain(raw: String) = DownloadRepository.rootDomainOf(raw)
 
-        // Prefer the currently active profile that matches
-        cookies.firstOrNull { it.isActive && url.contains(domainOf(it.url), ignoreCase = true) }
-            ?: cookies.firstOrNull { url.contains(domainOf(it.url), ignoreCase = true) }
+        // Prefer an active profile that matches, fall back to any matching profile
+        cookies.firstOrNull { it.isActive && rootDomain(it.url).let { r -> r.isNotEmpty() && url.contains(r, ignoreCase = true) } }
+            ?: cookies.firstOrNull { rootDomain(it.url).let { r -> r.isNotEmpty() && url.contains(r, ignoreCase = true) } }
     }
 
     AnimatedVisibility(
