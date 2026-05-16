@@ -32,6 +32,7 @@ import com.mediawave.downloader.data.model.ActiveDownload
 import com.mediawave.downloader.data.model.CookieProfile
 import com.mediawave.downloader.data.model.DownloadQuality
 import com.mediawave.downloader.ui.theme.*
+import com.mediawave.downloader.data.repository.DownloadRepository
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
