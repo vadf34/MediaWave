@@ -22,7 +22,7 @@ Download videos and audio from YouTube, TikTok, Instagram, and 1,800+ other site
 
 | Home | History | Profile Parser | Platform Selector | Settings |
 |:-------:|:-------:|:--------------:|:---------------:|:---------:|
-| <img src="docs/screenshots/screen_home.png" width="140"/> | <img src="docs/screenshots/screen_history.png" width="140"/> | <img src="docs/screenshots/screen_parser.png" width="140"/> | <img src="docs/screenshots/screen_parser_select.png" width="140"/> | <img src="docs/screenshots/screen_settings.png" width="140"/> |
+| <img src="docs/screenshots/screen_home.png?v=2" width="140"/> | <img src="docs/screenshots/screen_history.png?v=2" width="140"/> | <img src="docs/screenshots/screen_parser.png?v=2" width="140"/> | <img src="docs/screenshots/screen_parser_select.png?v=2" width="140"/> | <img src="docs/screenshots/screen_settings.png?v=2" width="140"/> |
 
 </div>
 
