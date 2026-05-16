@@ -24,7 +24,8 @@ class UserPreferences @Inject constructor(
         val PREF_LANGUAGE = stringPreferencesKey("pref_language")
         val PREF_DOWNLOAD_PATH = stringPreferencesKey("pref_download_path")
         val PREF_YTDLP_VERSION = stringPreferencesKey("pref_ytdlp_version")
-
+        val PREF_FIRST_LAUNCH = booleanPreferencesKey("pref_first_launch")
+        
         // Supported language codes mapped to their native display names
         val SUPPORTED_LANGUAGES = linkedMapOf(
             "system" to "System Default",
@@ -85,5 +86,12 @@ class UserPreferences @Inject constructor(
 
     suspend fun setYtdlpVersion(version: String) {
         context.dataStore.edit { it[PREF_YTDLP_VERSION] = version }
+    }
+    val isFirstLaunchFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[PREF_FIRST_LAUNCH] ?: true
+    }
+
+    suspend fun setFirstLaunch(value: Boolean) {
+        context.dataStore.edit { it[PREF_FIRST_LAUNCH] = value }
     }
 }
