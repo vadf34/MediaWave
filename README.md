@@ -2,9 +2,9 @@
 
 <div align="center">
 
-**Современный загрузчик медиа для Android**
+**A Modern Media Downloader for Android**
 
-Скачивай видео и аудио с YouTube, TikTok, Instagram и ещё 1800+ сайтов
+Download videos and audio from YouTube, TikTok, Instagram, and 1,800+ other sites
 
 ![Android](https://img.shields.io/badge/Android-10%2B-brightgreen?logo=android)
 ![Version](https://img.shields.io/badge/Версия-1.0.0-blue)
@@ -16,11 +16,11 @@
 
 ---
 
-## 📱 Скриншоты
+## 📱 Screenshots
 
 <div align="center">
 
-| Главная | История | Парсер профиля | Выбор платформы | Настройки |
+| Home | History | Profile Parser | Platform Selector | Settings |
 |:-------:|:-------:|:--------------:|:---------------:|:---------:|
 | <img src="docs/screenshots/screen_home.png" width="140"/> | <img src="docs/screenshots/screen_history.png" width="140"/> | <img src="docs/screenshots/screen_parser.png" width="140"/> | <img src="docs/screenshots/screen_parser_select.png" width="140"/> | <img src="docs/screenshots/screen_settings.png" width="140"/> |
 
@@ -28,75 +28,75 @@
 
 ---
 
-## ✨ Возможности
+## ✨ Features
 
-### 🔗 Загрузка по ссылке
-Просто скопируй ссылку на видео или пост — приложение автоматически вставит её из буфера обмена при открытии. Поддерживается более **1800 сайтов**: YouTube, TikTok, Instagram, Twitter/X, Facebook, VKontakte, Reddit, Pinterest, Twitch, Rumble и многие другие. Движок загрузки — актуальная версия **yt-dlp** (обновляется прямо из приложения).
+### 🔗 URL-based Download
+Simply copy a link to any video or post — the app will automatically paste it from the clipboard on launch. Supports over 1,800 sites, including YouTube, TikTok, Instagram, Twitter/X, Facebook, VKontakte, Reddit, Pinterest, Twitch, Rumble, and many more. The download engine is powered by the latest version of yt-dlp, which can be updated directly from within the app.
 
-### 👤 Парсер профиля
-Введи никнейм или URL аккаунта — приложение покажет все видео и фото этого профиля. Работает с Instagram, TikTok, YouTube, Twitter/X, Facebook, VKontakte, Reddit, Pinterest, Twitch, Rumble. Можно выбрать нужные файлы и скачать их одним нажатием.
+### 👤 Profile Parser
+Enter a username or account URL to browse all videos and photos from that profile. Supported platforms include Instagram, TikTok, YouTube, Twitter/X, Facebook, VKontakte, Reddit, Pinterest, Twitch, and Rumble. Select the desired files and download them with a single tap.
 
-### 📋 История загрузок
-Все загрузки сохраняются в истории с отображением статуса. Можно отслеживать завершённые, активные и неудавшиеся загрузки.
+### 📋 Download History
+All downloads are saved to a history log with status indicators. You can track completed, active, and failed downloads at a glance.
 
-### 🎬 Выбор качества
-Перед загрузкой отображается диалог с доступными форматами и разрешениями (если источник поддерживает HD). Выбирай между качеством и размером файла.
+### 🎬 Quality Selection
+Before each download, a dialog displays the available formats and resolutions (where the source supports HD). Choose the appropriate balance between quality and file size.
 
-### 🍪 Cookie-профили
-Для загрузки с приватных или авторизованных аккаунтов можно добавить cookies из браузера. Поддерживается несколько профилей для разных сайтов.
+### 🍪 Cookie Profiles
+To download content from private or authenticated accounts, you can import cookies from your browser. Multiple cookie profiles are supported for different sites.
 
-### ⚡ Фоновые загрузки
-Загрузки работают в фоне через Foreground Service — можно свернуть приложение, и закачка не прервётся. Уведомление показывает прогресс в реальном времени.
+### ⚡ Background Downloads
+Downloads run in the background via a Foreground Service — you can minimize the app without interrupting any active transfers. A persistent notification displays real-time progress.
 
-### 🌍 Мультиязычность
-Интерфейс доступен на 8 языках: **Украинский, Русский, Английский, Немецкий, Испанский, Французский, Португальский, Китайский**.
+### 🌍 Multi-language Support
+The interface is available in 8 languages: **Ukrainian, Russian, English, German, Spanish, French, Portuguese, and Chinese.**
 
-### 🎨 Тема оформления
-Поддерживается светлая и тёмная тема. Тёмная тема активирована по умолчанию.
+### 🎨 Theme
+Both light and dark themes are supported. Dark theme is enabled by default.
 
 ---
 
-## 📂 Куда сохраняются файлы
+## 📂 Storage Locations
 
-| Тип | Папка на устройстве |
+| Type | Directory on Device |
 |-----|---------------------|
-| 🎬 Видео | `Movies/MediaWave` |
-| 🎵 Аудио | `Music/MediaWave` |
+| 🎬 Video | `Movies/MediaWave` |
+| 🎵 Audio | `Music/MediaWave` |
 
 ---
 
-## 🛠️ Технологии
+## 🛠️ Tech Stack
 
-| Компонент | Технология |
+| Component | Technology |
 |-----------|-----------|
-| Язык | Kotlin |
+| Language | Kotlin |
 | UI | Jetpack Compose + Material 3 |
-| Архитектура | MVVM + Repository |
+| Architecture | MVVM + Repository |
 | DI | Hilt |
-| База данных | Room |
-| Загрузчик | youtubedl-android (yt-dlp) |
-| Фоновые задачи | WorkManager + Foreground Service |
-| Настройки | DataStore Preferences |
-| Сеть | OkHttp |
-| Изображения | Coil |
-| Анимации | Lottie |
+| Database | Room |
+| Download Engine | youtubedl-android (yt-dlp) |
+| Background Tasks | WorkManager + Foreground Service |
+| Preferences | DataStore Preferences |
+| Networking | OkHttp |
+| Image Loading | Coil |
+| Animations | Lottie |
 
 ---
 
-## 📋 Требования
+## 📋 Requirements
 
 - Android **10+** (API 29)
-- Интернет-соединение
-- ~50 МБ для бинарника yt-dlp (скачивается автоматически при первом запуске)
+- Internet connection
+- ~50 MB of free storage for the yt-dlp binary (downloaded automatically on first launch)
 
 ---
 
-## 🚀 Сборка
+## 🚀 Build Instructions
 
-1. Клонируй репозиторий
-2. Открой в **Android Studio Hedgehog** или новее
-3. Синхронизируй Gradle
-4. Запусти на устройстве или эмуляторе (API 29+)
+1. Clone the repository
+2. Open the project in **Android Studio Hedgehog** or later
+3. Sync Gradle
+4. Run on a physical device or emulator (API 29+)
 
 ```bash
 git clone https://github.com/vadf34/MediaWave.git
@@ -106,36 +106,36 @@ gradle assembleDebug
 
 ---
 
-## 📁 Структура проекта
+## 📁 Project Structure
 
 ```
 app/src/main/java/com/mediawave/downloader/
-├── MainActivity.kt                  — точка входа
+├── MainActivity.kt                  — app entry point
 ├── MediaWaveApp.kt                  — Application класс (Hilt)
 ├── data/
-│   ├── db/                          — Room: база данных и DAO
-│   ├── model/                       — модели данных
-│   └── repository/                  — репозитории, DataStore
-├── di/                              — Hilt модули
+│   ├── db/                          — Room: database and DAOs
+│   ├── model/                       — data models
+│   └── repository/                  — repositories, DataStore
+├── di/         —    Hilt modules
 ├── download/
-│   ├── DownloadManager.kt           — логика загрузки через yt-dlp
+│   ├── DownloadManager.kt           — download logic via yt-dlp
 │   └── DownloadService.kt           — Foreground Service
 ├── ui/
 │   ├── screens/
-│   │   ├── home/                    — главный экран загрузки
-│   │   ├── history/                 — история загрузок
-│   │   ├── profile/                 — парсер профилей
-│   │   ├── settings/                — настройки
-│   │   └── cookies/                 — управление cookie
-│   └── theme/                       — тема Compose
+│   │   ├── home/                    — main download screen
+│   │   ├── history/                 — download history
+│   │   ├── profile/                 — profile parser
+│   │   ├── settings/                — app settings
+│   │   └── cookies/                 — cookie management
+│   └── theme/                       — Compose theme 
 └── util/
-    └── LocaleHelper.kt              — смена языка
+    └── LocaleHelper.kt              — locale/language switching
 ```
 
 ---
 
-## ☕ Поддержка проекта
-Если тебе нравится MediaWave и ты хочешь поддержать разработку, это можно сделать здесь:
+## ☕ Support the Project
+If you enjoy using MediaWave and would like to support its development, you can do so here:
 
 
 [![Donate](https://img.shields.io/badge/Donate-Donatello-5865F2?style=for-the-badge&logo=ko-fi&logoColor=white)](https://donatello.to/nexid)
@@ -148,7 +148,7 @@ app/src/main/java/com/mediawave/downloader/
 
 ![USDT](https://img.shields.io/badge/USDT%20(TRC20)-26A17B?style=for-the-badge&logo=tether&logoColor=white) `TQfyjiAByrvJDke6dGgvzC8NN8TKifkCMY`
 
-Любая поддержка мотивирует исправлять баги побыстрее! ✨
+Any support motivates faster bug fixes! ✨
 
 
 
