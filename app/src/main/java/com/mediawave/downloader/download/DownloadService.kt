@@ -111,7 +111,7 @@ class DownloadService : Service() {
                     else -> DownloadQuality.HD
                 }
 
-                val activeCookie = repository.getActiveCookie()
+                val activeCookie = repository.getCookieForUrl(url)
 
                 downloadManager.startDownload(
                     url = url,
