@@ -116,7 +116,7 @@ app/src/main/java/com/mediawave/downloader/
 │   ├── db/                          — Room: database and DAOs
 │   ├── model/                       — data models
 │   └── repository/                  — repositories, DataStore
-├── di/         —    Hilt modules
+├── di/                              — Hilt modules
 ├── download/
 │   ├── DownloadManager.kt           — download logic via yt-dlp
 │   └── DownloadService.kt           — Foreground Service
