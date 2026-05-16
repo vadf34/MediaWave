@@ -137,6 +137,11 @@ app/src/main/java/com/mediawave/downloader/
 ## ☕ Поддержка проекта
 Если тебе нравится MediaWave и ты хочешь поддержать разработку, это можно сделать здесь:
 
+
+[![Donate](https://img.shields.io/badge/Donate-Donatello-5865F2?style=for-the-badge&logo=ko-fi&logoColor=white)](https://donatello.to/nexid)
+
+
+
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/nexid)
 
 
