@@ -10,12 +10,21 @@ android {
     namespace = "com.mediawave.downloader"
     compileSdk = 34
 
+    signingConfigs {
+        create("release") {
+            storeFile = file(System.getenv("KEYSTORE_PATH") ?: "keystore.jks")
+            storePassword = System.getenv("KEYSTORE_PASSWORD")
+            keyAlias = System.getenv("KEY_ALIAS")
+            keyPassword = System.getenv("KEY_PASSWORD")
+        }
+    }
+
     defaultConfig {
         applicationId = "com.mediawave.downloader"
         minSdk = 29
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.0.3-alpha"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -25,6 +34,7 @@ android {
 
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -98,10 +108,10 @@ dependencies {
     implementation("androidx.room:room-ktx:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
 
-    // yt-dlp Android (youtube-dl-android fork with yt-dlp)
-    implementation("io.github.junkfood02.youtubedl-android:library:0.18.1")
-    implementation("io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1")
-    implementation("io.github.junkfood02.youtubedl-android:aria2c:0.18.1")
+    // yt-dlp Android
+    implementation("io.github.junkfood02.youtubedl-android:library:0.17.3")
+    implementation("io.github.junkfood02.youtubedl-android:ffmpeg:0.17.3")
+    implementation("io.github.junkfood02.youtubedl-android:aria2c:0.17.3")
 
     // Network
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
@@ -118,7 +128,7 @@ dependencies {
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
-    // WorkManager for background downloads
+    // WorkManager
     implementation("androidx.work:work-runtime-ktx:2.9.0")
     implementation("androidx.hilt:hilt-work:1.2.0")
     ksp("androidx.hilt:hilt-compiler:1.2.0")
@@ -127,7 +137,7 @@ dependencies {
     implementation("com.google.accompanist:accompanist-permissions:0.34.0")
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.34.0")
 
-    // Lottie for animations
+    // Lottie
     implementation("com.airbnb.android:lottie-compose:6.4.0")
 
     // Splash screen
