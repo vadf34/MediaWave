@@ -1,12 +1,11 @@
 name: Build APK
 
 on:
-  push:
   workflow_dispatch:
 
 jobs:
   build:
-    name: Build APK
+    name: Build Release APK
     runs-on: ubuntu-latest
 
     steps:
@@ -24,12 +23,21 @@ jobs:
         with:
           gradle-version: '8.3'
 
-      - name: Build Debug APK
-        run: gradle assembleDebug
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore.jks
 
-      - name: Upload Debug APK
+      - name: Build Release APK
+        run: gradle assembleRelease
+        env:
+          KEYSTORE_PATH: ${{ github.workspace }}/keystore.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
-          name: MediaWave-debug
-          path: app/build/outputs/apk/debug/*.apk
+          name: MediaWave-release
+          path: app/build/outputs/apk/release/*.apk
           retention-days: 30
