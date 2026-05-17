@@ -85,4 +85,11 @@
     <string name="profile_download_selected">Завантажити %d файлів</string>
     <string name="profile_folder_note">Збережеться у папку: Платформа_нік/</string>
     <string name="profile_downloading_progress">Завантаження…</string>
+    <string name="profile_cookie_used">🍪 Cookie: %s</string>
+    <string name="profile_cookie_none">Cookie не використовується</string>
+    <string name="profile_pick_platform">Оберіть платформу</string>
+    <string name="profile_pick_platform_desc">Введений нікнейм буде використано для пошуку</string>
+    <string name="profile_add_site">Додати сайт</string>
+    <string name="profile_site_name_label">Назва сайту</string>
+    <string name="profile_site_domain_label">Домен</string>
 </resources>
