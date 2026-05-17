@@ -109,10 +109,9 @@ dependencies {
     ksp("androidx.room:room-compiler:2.6.1")
 
     // yt-dlp Android
-    implementation("io.github.junkfood02.youtubedl-android:library:0.17.3")
-    implementation("io.github.junkfood02.youtubedl-android:ffmpeg:0.17.3")
-    implementation("io.github.junkfood02.youtubedl-android:aria2c:0.17.3")
-
+    implementation("io.github.junkfood02.youtubedl-android:library:0.18.1")
+    implementation("io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1")
+    implementation("io.github.junkfood02.youtubedl-android:aria2c:0.18.1")
     // Network
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
