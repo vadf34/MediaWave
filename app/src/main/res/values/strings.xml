@@ -68,13 +68,13 @@
     <string name="cookie_manage">Manage Profiles</string>
 
     <!-- Profile Parser - Cookie / Platform -->
-    <string name="profile_cookie_used">🍪 Кука: %s</string>
-    <string name="profile_cookie_none">Кука не використовується</string>
-    <string name="profile_pick_platform">Оберіть платформу</string>
-    <string name="profile_pick_platform_desc">Введений нікнейм буде використано для пошуку</string>
-    <string name="profile_add_site">Додати сайт</string>
-    <string name="profile_site_name_label">Назва сайту</string>
-    <string name="profile_site_domain_label">Домен</string>
+    <string name="profile_cookie_used">🍪 Cookie: %s</string>
+    <string name="profile_cookie_none">No cookie selected</string>
+    <string name="profile_pick_platform">Select platform</string>
+    <string name="profile_pick_platform_desc">The entered username will be used to search</string>
+    <string name="profile_add_site">Add site</string>
+    <string name="profile_site_name_label">Site name</string>
+    <string name="profile_site_domain_label">Domain</string>
     <!-- Profile Parser -->
     <string name="profile_parser_title">Profile Parser</string>
     <string name="profile_parser_nav">Parser</string>
