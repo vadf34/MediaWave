@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    name: Build Release APK
+    name: Build Debug APK
     runs-on: ubuntu-latest
 
     steps:
@@ -23,21 +23,12 @@ jobs:
         with:
           gradle-version: '8.3'
 
-      - name: Decode Keystore
-        run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore.jks
+      - name: Build Debug APK
+        run: gradle assembleDebug
 
-      - name: Build Release APK
-        run: gradle assembleRelease
-        env:
-          KEYSTORE_PATH: ${{ github.workspace }}/keystore.jks
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-
-      - name: Upload Release APK
+      - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: MediaWave-release
-          path: app/build/outputs/apk/release/*.apk
+          name: MediaWave-debug
+          path: app/build/outputs/apk/debug/*.apk
           retention-days: 30
