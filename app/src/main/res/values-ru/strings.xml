@@ -85,4 +85,11 @@
     <string name="profile_download_selected">Скачать %d файлов</string>
     <string name="profile_folder_note">Сохранится в папку: Платформа_ник/</string>
     <string name="profile_downloading_progress">Загрузка…</string>
+    <string name="profile_cookie_used">🍪 Cookie: %s</string>
+    <string name="profile_cookie_none">Cookie не используется</string>
+    <string name="profile_pick_platform">Выберите платформу</string>
+    <string name="profile_pick_platform_desc">Введённый ник будет использован для поиска</string>
+    <string name="profile_add_site">Добавить сайт</string>
+    <string name="profile_site_name_label">Название сайта</string>
+    <string name="profile_site_domain_label">Домен</string>
 </resources>
