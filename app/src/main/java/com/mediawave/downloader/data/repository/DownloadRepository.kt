@@ -4,6 +4,7 @@ import com.mediawave.downloader.data.db.CookieDao
 import com.mediawave.downloader.data.db.DownloadDao
 import com.mediawave.downloader.data.model.CookieProfile
 import com.mediawave.downloader.data.model.DownloadRecord
+import com.mediawave.downloader.data.model.DownloadStatus
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -21,6 +22,31 @@ class DownloadRepository @Inject constructor(
     suspend fun deleteDownload(record: DownloadRecord) = downloadDao.deleteDownload(record)
 
     suspend fun clearHistory() = downloadDao.clearAll()
+
+    suspend fun updateStatus(id: Long, status: DownloadStatus) {
+        val record = downloadDao.getById(id.toInt()) ?: return
+        downloadDao.updateDownload(record.copy(status = status))
+    }
+
+    suspend fun updateRecord(
+        id: Long,
+        title: String,
+        author: String,
+        thumbnailUrl: String,
+        filePath: String,
+        extractor: String,
+        status: DownloadStatus,
+    ) {
+        val record = downloadDao.getById(id.toInt()) ?: return
+        downloadDao.updateDownload(record.copy(
+            title = title,
+            author = author,
+            thumbnailUrl = thumbnailUrl,
+            filePath = filePath,
+            extractor = extractor,
+            status = status,
+        ))
+    }
 
     suspend fun insertCookie(profile: CookieProfile): Long = cookieDao.insertCookie(profile)
 
