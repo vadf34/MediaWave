@@ -32,11 +32,15 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
 import com.mediawave.downloader.data.model.DownloadRecord
+import com.mediawave.downloader.data.model.DownloadStatus
 import com.mediawave.downloader.ui.screens.home.HomeViewModel
 import com.mediawave.downloader.ui.theme.*
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.ui.res.stringResource
+import com.mediawave.downloader.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -162,7 +166,10 @@ private fun HistoryItem(
         modifier = Modifier
             .fillMaxWidth()
             .combinedClickable(
-                onClick = onOpen,
+                onClick = {
+                    if (record.status == DownloadStatus.FAILED) onCopyLink()
+                    else onOpen()
+                },
                 onLongClick = { showMenu = true },
             ),
     ) {
@@ -233,11 +240,37 @@ private fun HistoryItem(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Text(
-                    text = formatTimestamp(record.timestamp),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                )
+                when (record.status) {
+                    DownloadStatus.DOWNLOADING -> {
+                        LinearProgressIndicator(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(3.dp)
+                                .clip(RoundedCornerShape(2.dp)),
+                            color = Accent,
+                            trackColor = Accent.copy(alpha = 0.2f),
+                        )
+                        Text(
+                            text = "Завантажується...",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Accent,
+                        )
+                    }
+                    DownloadStatus.FAILED -> {
+                        Text(
+                            text = "❌ ${stringResource(R.string.download_failed)} — ${stringResource(R.string.copy_link)}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = ErrorColor,
+                        )
+                    }
+                    else -> {
+                        Text(
+                            text = formatTimestamp(record.timestamp),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        )
+                    }
+                }
             }
 
             // Quick actions
