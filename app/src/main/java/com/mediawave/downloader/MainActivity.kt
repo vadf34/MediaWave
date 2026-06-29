@@ -46,6 +46,7 @@ import com.mediawave.downloader.util.LocaleHelper
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
+
 sealed class Screen(val route: String) {
     object Home : Screen("home")
     object History : Screen("history")
@@ -107,7 +108,7 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        handleIntent(intent)
+
     }
 
     private fun requestAllPermissions() {
