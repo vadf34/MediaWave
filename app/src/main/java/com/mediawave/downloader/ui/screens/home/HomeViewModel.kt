@@ -97,8 +97,21 @@ class HomeViewModel @Inject constructor(
 
         // Start foreground service so download survives when app is backgrounded
         DownloadService.start(context)
+        var pendingRecordId = -1L
 
         viewModelScope.launch(Dispatchers.IO) {
+            pendingRecordId = repository.insertDownload(
+                DownloadRecord(
+                    title = url.substringAfterLast("/"),
+                    author = "",
+                    sourceUrl = url,
+                    thumbnailUrl = "",
+                    filePath = "",
+                    quality = quality.label,
+                    extractor = "",
+                    status = DownloadStatus.DOWNLOADING,
+                )
+            )
             val activeCookie = repository.getCookieForUrl(url)
 
             downloadManager.startDownload(
@@ -110,17 +123,14 @@ class HomeViewModel @Inject constructor(
                 },
                 onComplete = { filePath, title, author, thumbnail, extractor ->
                     viewModelScope.launch {
-                        repository.insertDownload(
-                            DownloadRecord(
-                                title = title.ifBlank { url.substringAfterLast("/") },
-                                author = author.ifBlank { "Unknown" },
-                                sourceUrl = url,
-                                thumbnailUrl = thumbnail,
-                                filePath = filePath,
-                                quality = quality.label,
-                                extractor = extractor,
-                                status = DownloadStatus.COMPLETED,
-                            )
+                        repository.updateRecord(
+                            id = pendingRecordId,
+                            title = title.ifBlank { url.substringAfterLast("/") },
+                            author = author.ifBlank { "Unknown" },
+                            thumbnailUrl = thumbnail,
+                            filePath = filePath,
+                            extractor = extractor,
+                            status = DownloadStatus.COMPLETED,
                         )
                     }
                     _uiState.update {
@@ -134,6 +144,11 @@ class HomeViewModel @Inject constructor(
                     DownloadService.stop(context)
                 },
                 onError = { error ->
+                    viewModelScope.launch {
+                        if (pendingRecordId != -1L) {
+                            repository.updateStatus(pendingRecordId, DownloadStatus.FAILED)
+                        }
+                    }
                     _uiState.update {
                         it.copy(
                             isDownloading = false,
