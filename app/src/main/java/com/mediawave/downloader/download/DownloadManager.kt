@@ -24,6 +24,7 @@ import java.io.File
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
+import org.json.JSONObject
 
 @Singleton
 class DownloadManager @Inject constructor(
@@ -145,6 +146,7 @@ class DownloadManager @Inject constructor(
 
             // Suppress non-fatal warnings in output parsing
             addOption("--no-warnings")
+            addOption("--print-json")
         }
 
         val initialDownload = ActiveDownload(
@@ -164,8 +166,8 @@ class DownloadManager @Inject constructor(
         try {
             var lastTitle = ""
             var lastAuthor = ""
-            val lastThumbnail = ""
-            val lastExtractor = ""
+            var lastThumbnail = ""
+            var lastExtractor = ""
 
             YoutubeDL.getInstance().execute(
                 request,
@@ -180,6 +182,33 @@ class DownloadManager @Inject constructor(
                     } else {
                         lastTitle = fileName.trim()
                     }
+                }
+
+                // Parse thumbnail and extractor from JSON metadata line
+                if (line.trim().startsWith("{")) {
+                    try {
+                        val json = JSONObject(line.trim())
+                        if (lastThumbnail.isBlank()) {
+                            val thumb = json.optString("thumbnail", "")
+                            if (thumb.isNotBlank()) {
+                                lastThumbnail = thumb
+                            } else {
+                                val arr = json.optJSONArray("thumbnails")
+                                if (arr != null && arr.length() > 0) {
+                                    lastThumbnail = arr.getJSONObject(arr.length() - 1).optString("url", "")
+                                }
+                            }
+                        }
+                        if (lastExtractor.isBlank()) {
+                            lastExtractor = json.optString("extractor_key", json.optString("extractor", ""))
+                        }
+                        if (lastTitle.isBlank()) {
+                            lastTitle = json.optString("title", json.optString("fulltitle", ""))
+                        }
+                        if (lastAuthor.isBlank()) {
+                            lastAuthor = json.optString("uploader", json.optString("channel", ""))
+                        }
+                    } catch (_: Exception) {}
                 }
 
                 val speedRegex = Regex("""([\d.]+\s*[KMGk]iB/s)""")
