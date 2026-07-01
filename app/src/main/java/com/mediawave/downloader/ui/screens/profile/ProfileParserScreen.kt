@@ -5,6 +5,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -109,7 +110,7 @@ fun ProfileParserScreen(
 
                 ProfileParserState.PARSING -> ParsingIndicator(platform = uiState.platformDetected)
 
-                ProfileParserState.ERROR -> ErrorCard(message = uiState.errorMessage ?: "Помилка")
+                ProfileParserState.ERROR -> ErrorCard(message = uiState.errorMessage ?: stringResource(R.string.error))
 
                 ProfileParserState.DONE -> {
                     ProfileInfoHeader(
@@ -134,7 +135,7 @@ fun ProfileParserScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            "${filtered.count { it.isSelected }} вибрано з ${filtered.size}",
+                            stringResource(R.string.profile_selected_count, filtered.count { it.isSelected }, filtered.size),
                             style = MaterialTheme.typography.bodySmall,
                             color = TextSecondary,
                         )
@@ -215,7 +216,7 @@ private fun CookieStatusBadge(cookieName: String?) {
     val bgColor = if (isActive) SuccessColor.copy(alpha = 0.08f) else DarkSurface.copy(alpha = 0.5f)
     val borderColor = if (isActive) SuccessColor.copy(alpha = 0.3f) else DarkOutline
     val icon = if (isActive) Icons.Default.Security else Icons.Outlined.Lock
-    val label = if (isActive) "🍪 Кука: $cookieName" else "Кука не використовується"
+    val label = if (isActive) stringResource(R.string.profile_cookie_used, cookieName ?: "") else stringResource(R.string.profile_cookie_none)
     val tintColor = if (isActive) SuccessColor else TextTertiary
 
     Surface(
@@ -260,7 +261,7 @@ private fun PlatformPickerDialog(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        "Оберіть платформу",
+                        stringResource(R.string.profile_pick_platform),
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary,
                         style = MaterialTheme.typography.titleMedium,
@@ -270,7 +271,7 @@ private fun PlatformPickerDialog(
                     }
                 }
                 Text(
-                    "Введений нікнейм буде використано для пошуку",
+                    stringResource(R.string.profile_pick_platform_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = TextTertiary,
                 )
@@ -312,7 +313,7 @@ private fun PlatformPickerDialog(
                 ) {
                     Icon(Icons.Default.Add, null, tint = Accent, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Додати сайт", color = Accent, style = MaterialTheme.typography.labelMedium)
+                    Text(stringResource(R.string.profile_add_site), color = Accent, style = MaterialTheme.typography.labelMedium)
                 }
             }
         }
@@ -374,15 +375,15 @@ private fun AddCustomSiteDialog(
         containerColor = DarkSurface,
         shape = RoundedCornerShape(20.dp),
         title = {
-            Text("Додати сайт", color = TextPrimary, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.profile_add_site), color = TextPrimary, fontWeight = FontWeight.Bold)
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Назва сайту", color = TextTertiary) },
-                    placeholder = { Text("напр. Dailymotion", color = TextTertiary) },
+                    label = { Text(stringResource(R.string.profile_site_name_label), color = TextTertiary) },
+                    placeholder = { Text(stringResource(R.string.site_name_hint), color = TextTertiary) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -397,8 +398,8 @@ private fun AddCustomSiteDialog(
                 OutlinedTextField(
                     value = domain,
                     onValueChange = { domain = it },
-                    label = { Text("Домен", color = TextTertiary) },
-                    placeholder = { Text("dailymotion.com", color = TextTertiary) },
+                    label = { Text(stringResource(R.string.profile_site_domain_label), color = TextTertiary) },
+                    placeholder = { Text(stringResource(R.string.domain_hint), color = TextTertiary) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -459,7 +460,7 @@ private fun ProfileInputCard(
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = {
                     Text(
-                        "нікнейм, @нікнейм або посилання",
+                        stringResource(R.string.profile_input_hint_extended),
                         color = TextTertiary,
                         style = MaterialTheme.typography.bodyMedium,
                     )
@@ -524,8 +525,8 @@ private fun ProfileHelpCard() {
                 "instagram.com/username",
                 "tiktok.com/@username",
                 "youtube.com/@channel",
-                "@username  → оберіть соцмережу",
-                "нікнейм   → оберіть соцмережу",
+                stringResource(R.string.profile_help_example_username),
+                stringResource(R.string.profile_help_example_nickname),
             ).forEach { example ->
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(modifier = Modifier.size(4.dp).background(Accent, CircleShape))
@@ -548,7 +549,7 @@ private fun ParsingIndicator(platform: String) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
             CircularProgressIndicator(color = Accent, modifier = Modifier.size(48.dp))
             Text(
-                stringResource(R.string.profile_parsing_desc, platform.ifBlank { "акаунт" }),
+                stringResource(R.string.profile_parsing_desc, platform.ifBlank { stringResource(R.string.account) }),
                 color = TextSecondary,
                 style = MaterialTheme.typography.bodyMedium,
             )
@@ -589,7 +590,7 @@ private fun ProfileInfoHeader(platform: String, username: String, count: Int) {
             }
             Surface(shape = RoundedCornerShape(20.dp), color = Accent.copy(alpha = 0.15f)) {
                 Text(
-                    "$count медіа",
+                    stringResource(R.string.profile_media_count, count),
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                     style = MaterialTheme.typography.labelSmall,
                     color = Accent,
@@ -606,7 +607,7 @@ private fun MediaFilterTabs(filter: MediaTypeFilter, onFilterChange: (MediaTypeF
         modifier = Modifier.fillMaxWidth().background(DarkSurface, RoundedCornerShape(12.dp)).padding(4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        MediaTypeFilter.values().forEach { tab ->
+        MediaTypeFilter.entries.forEach { tab ->
             val selected = filter == tab
             val label = when (tab) {
                 MediaTypeFilter.ALL   -> stringResource(R.string.profile_filter_all)
@@ -680,10 +681,17 @@ private fun MediaItemRow(item: ProfileMediaItem, onToggle: () -> Unit) {
                 }
             }
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                Text(item.title.ifBlank { "Без назви" }, maxLines = 2, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium, color = TextPrimary)
+                Text(item.title.ifBlank { stringResource(R.string.no_title) }, maxLines = 2, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium, color = TextPrimary)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (item.uploadDate.isNotBlank()) Text(item.uploadDate, style = MaterialTheme.typography.labelSmall, color = TextTertiary)
-                    if (item.viewCount > 0) Text(formatViews(item.viewCount), style = MaterialTheme.typography.labelSmall, color = TextTertiary)
+                    if (item.viewCount > 0) {
+                        val viewsLabel = when {
+                            item.viewCount >= 1_000_000 -> stringResource(R.string.views_format_m, item.viewCount / 1_000_000.0)
+                            item.viewCount >= 1_000     -> stringResource(R.string.views_format_k, item.viewCount / 1_000.0)
+                            else                       -> stringResource(R.string.views_format, item.viewCount)
+                        }
+                        Text(viewsLabel, style = MaterialTheme.typography.labelSmall, color = TextTertiary)
+                    }
                 }
             }
             when (item.downloadStatus) {
@@ -698,12 +706,6 @@ private fun MediaItemRow(item: ProfileMediaItem, onToggle: () -> Unit) {
             }
         }
     }
-}
-
-private fun formatViews(count: Long): String = when {
-    count >= 1_000_000 -> "%.1fM перегл.".format(count / 1_000_000.0)
-    count >= 1_000     -> "%.0fK перегл.".format(count / 1_000.0)
-    else               -> "$count перегл."
 }
 
 @Composable
@@ -759,7 +761,7 @@ private fun ProfileQualityDialog(onDismiss: () -> Unit, onSelect: (DownloadQuali
         title = { Text(stringResource(R.string.select_quality), color = TextPrimary, fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                DownloadQuality.values().forEach { quality ->
+                DownloadQuality.entries.forEach { quality ->
                     Surface(
                         shape = RoundedCornerShape(12.dp),
                         color = DarkSurfaceVariant,
