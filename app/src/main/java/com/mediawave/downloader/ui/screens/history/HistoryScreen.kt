@@ -4,7 +4,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.animation.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -21,7 +20,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -31,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
+import com.mediawave.downloader.data.model.ActiveDownload
 import com.mediawave.downloader.data.model.DownloadRecord
 import com.mediawave.downloader.data.model.DownloadStatus
 import com.mediawave.downloader.ui.screens.home.HomeViewModel
@@ -38,7 +37,6 @@ import com.mediawave.downloader.ui.theme.*
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.ui.res.stringResource
 import com.mediawave.downloader.R
 
@@ -47,12 +45,10 @@ import com.mediawave.downloader.R
 fun HistoryScreen(viewModel: HomeViewModel) {
     val context = LocalContext.current
     val downloads by viewModel.downloads.collectAsState(initial = emptyList())
+    val activeDownloads by viewModel.activeDownloads.collectAsState()
     var showClearDialog by remember { mutableStateOf(false) }
-    var selectedRecord by remember { mutableStateOf<DownloadRecord?>(null) }
-    val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = Color.Transparent,
     ) { padding ->
         Column(
@@ -70,7 +66,7 @@ fun HistoryScreen(viewModel: HomeViewModel) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "History",
+                    text = stringResource(R.string.history),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
@@ -80,7 +76,7 @@ fun HistoryScreen(viewModel: HomeViewModel) {
                     IconButton(onClick = { showClearDialog = true }) {
                         Icon(
                             Icons.Outlined.DeleteSweep,
-                            contentDescription = "Clear history",
+                            contentDescription = stringResource(R.string.clear_history),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
@@ -96,18 +92,18 @@ fun HistoryScreen(viewModel: HomeViewModel) {
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     items(downloads, key = { it.id }) { record ->
+                        val activeDownload = activeDownloads.values.find { it.dbRecordId == record.id.toLong() }
+                        
                         AnimatedVisibility(
                             visible = true,
                             enter = fadeIn() + slideInVertically(),
                         ) {
                             HistoryItem(
                                 record = record,
+                                activeDownload = activeDownload,
                                 onCopyLink = {
                                     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                                     clipboard.setPrimaryClip(ClipData.newPlainText("URL", record.sourceUrl))
-                                    viewModel.let {
-                                        /* show snackbar */
-                                    }
                                 },
                                 onShare = { shareFile(context, record.filePath) },
                                 onDelete = { viewModel.deleteDownload(record) },
@@ -125,8 +121,8 @@ fun HistoryScreen(viewModel: HomeViewModel) {
         AlertDialog(
             onDismissRequest = { showClearDialog = false },
             icon = { Icon(Icons.Outlined.DeleteForever, null, tint = ErrorColor) },
-            title = { Text("Clear History") },
-            text = { Text("This will delete all download history records. Files on disk will not be deleted.") },
+            title = { Text(stringResource(R.string.clear_history)) },
+            text = { Text(stringResource(R.string.clear_history_desc)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -135,12 +131,12 @@ fun HistoryScreen(viewModel: HomeViewModel) {
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = ErrorColor),
                 ) {
-                    Text("Clear All")
+                    Text(stringResource(R.string.clear_all))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showClearDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             },
             containerColor = MaterialTheme.colorScheme.surface,
@@ -153,6 +149,7 @@ fun HistoryScreen(viewModel: HomeViewModel) {
 @Composable
 private fun HistoryItem(
     record: DownloadRecord,
+    activeDownload: ActiveDownload? = null,
     onCopyLink: () -> Unit,
     onShare: () -> Unit,
     onDelete: () -> Unit,
@@ -203,7 +200,6 @@ private fun HistoryItem(
                     )
                 }
 
-                // Quality badge
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
@@ -233,32 +229,42 @@ private fun HistoryItem(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Text(
-                    text = record.author.ifBlank { record.extractor },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                when (record.status) {
+                
+                val status = activeDownload?.status ?: record.status
+                when (status) {
                     DownloadStatus.DOWNLOADING -> {
+                        val progress = activeDownload?.progress ?: 0f
+                        val speed = activeDownload?.speed ?: ""
                         LinearProgressIndicator(
+                            progress = { progress },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(3.dp)
+                                .height(4.dp)
                                 .clip(RoundedCornerShape(2.dp)),
                             color = Accent,
                             trackColor = Accent.copy(alpha = 0.2f),
                         )
-                        Text(
-                            text = "Завантажується...",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Accent,
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "${(progress * 100).toInt()}% ${if (speed.isNotBlank()) "• $speed" else ""}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Accent,
+                            )
+                            if (activeDownload?.eta?.isNotBlank() == true) {
+                                Text(
+                                    text = activeDownload.eta,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
                     }
                     DownloadStatus.FAILED -> {
                         Text(
-                            text = "❌ ${stringResource(R.string.download_failed)} — ${stringResource(R.string.copy_link)}",
+                            text = "❌ ${stringResource(R.string.download_failed)}",
                             style = MaterialTheme.typography.labelSmall,
                             color = ErrorColor,
                         )
@@ -273,79 +279,27 @@ private fun HistoryItem(
                 }
             }
 
-            // Quick actions
-            Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                // Copy link
-                IconButton(
-                    onClick = onCopyLink,
-                    modifier = Modifier.size(36.dp),
-                ) {
-                    Icon(
-                        Icons.Outlined.Link,
-                        contentDescription = "Copy link",
-                        tint = Accent,
-                        modifier = Modifier.size(18.dp),
-                    )
-                }
-                // Share
-                IconButton(
-                    onClick = onShare,
-                    modifier = Modifier.size(36.dp),
-                ) {
-                    Icon(
-                        Icons.Outlined.Share,
-                        contentDescription = "Share",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(18.dp),
-                    )
-                }
+            // Actions
+            IconButton(onClick = onShare, modifier = Modifier.size(36.dp)) {
+                Icon(Icons.Outlined.Share, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
             }
         }
     }
 
-    // Context menu
     if (showMenu) {
         AlertDialog(
             onDismissRequest = { showMenu = false },
-            title = {
-                Text(
-                    record.title.ifBlank { "Download" },
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            },
+            title = { Text(record.title.ifBlank { stringResource(R.string.download) }, maxLines = 2, overflow = TextOverflow.Ellipsis) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    MenuAction(
-                        icon = Icons.Outlined.OpenInNew,
-                        label = "Open file",
-                        onClick = { onOpen(); showMenu = false },
-                    )
-                    MenuAction(
-                        icon = Icons.Outlined.Link,
-                        label = "Copy source link",
-                        onClick = { onCopyLink(); showMenu = false },
-                    )
-                    MenuAction(
-                        icon = Icons.Outlined.Share,
-                        label = "Share file",
-                        onClick = { onShare(); showMenu = false },
-                    )
-                    MenuAction(
-                        icon = Icons.Outlined.Delete,
-                        label = "Remove from history",
-                        labelColor = ErrorColor,
-                        onClick = { onDelete(); showMenu = false },
-                    )
+                    MenuAction(icon = Icons.Outlined.OpenInNew, label = stringResource(R.string.open_file), onClick = { onOpen(); showMenu = false })
+                    MenuAction(icon = Icons.Outlined.Link, label = stringResource(R.string.copy_source_link), onClick = { onCopyLink(); showMenu = false })
+                    MenuAction(icon = Icons.Outlined.Share, label = stringResource(R.string.share_file), onClick = { onShare(); showMenu = false })
+                    MenuAction(icon = Icons.Outlined.Delete, label = stringResource(R.string.remove_from_history), labelColor = ErrorColor, onClick = { onDelete(); showMenu = false })
                 }
             },
             confirmButton = {},
-            dismissButton = {
-                TextButton(onClick = { showMenu = false }) { Text("Cancel") }
-            },
+            dismissButton = { TextButton(onClick = { showMenu = false }) { Text(stringResource(R.string.cancel)) } },
             containerColor = MaterialTheme.colorScheme.surface,
             shape = RoundedCornerShape(20.dp),
         )
@@ -353,24 +307,9 @@ private fun HistoryItem(
 }
 
 @Composable
-private fun MenuAction(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    labelColor: Color = MaterialTheme.colorScheme.onSurface,
-    onClick: () -> Unit,
-) {
-    Surface(
-        onClick = onClick,
-        color = Color.Transparent,
-        shape = RoundedCornerShape(8.dp),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
+private fun MenuAction(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, labelColor: Color = MaterialTheme.colorScheme.onSurface, onClick: () -> Unit) {
+    Surface(onClick = onClick, color = Color.Transparent, shape = RoundedCornerShape(8.dp)) {
+        Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Icon(icon, null, tint = labelColor, modifier = Modifier.size(20.dp))
             Text(label, color = labelColor, style = MaterialTheme.typography.bodyMedium)
         }
@@ -379,23 +318,11 @@ private fun MenuAction(
 
 @Composable
 private fun EmptyHistoryState() {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
+    Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
         Text(text = "📥", fontSize = 64.sp)
         Spacer(Modifier.height(16.dp))
-        Text(
-            text = "No downloads yet",
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Text(
-            text = "Your download history will appear here",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-        )
+        Text(text = stringResource(R.string.no_history), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(text = stringResource(R.string.no_history_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f))
     }
 }
 
@@ -413,7 +340,7 @@ private fun shareFile(context: Context, filePath: String) {
         putExtra(Intent.EXTRA_STREAM, uri)
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
-    context.startActivity(Intent.createChooser(intent, "Share via"))
+    context.startActivity(Intent.createChooser(intent, context.getString(R.string.share_via)))
 }
 
 private fun openFile(context: Context, filePath: String) {
