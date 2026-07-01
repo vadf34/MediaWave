@@ -76,4 +76,22 @@ data class ActiveDownload(
     val eta: String,
     val status: DownloadStatus,
     val quality: DownloadQuality,
+    val dbRecordId: Long? = null,
+)
+
+@Serializable
+data class AppSettingsBackup(
+    val quality: String,
+    val theme: Int,
+    val autoPaste: Boolean,
+    val askQuality: Boolean,
+    val language: String
+)
+
+@Serializable
+data class AppBackup(
+    val version: Int = 1,
+    val downloads: List<DownloadRecord>,
+    val cookies: List<CookieProfile>,
+    val settings: AppSettingsBackup
 )
