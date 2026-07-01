@@ -15,6 +15,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.mediawave.downloader.R
 import com.mediawave.downloader.data.model.CookieProfile
 import com.mediawave.downloader.ui.screens.home.HomeViewModel
 import com.mediawave.downloader.ui.theme.*
@@ -46,12 +48,12 @@ fun CookiesScreen(
             }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Cookie Profiles",
+                    text = stringResource(R.string.cookie_profiles),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                 )
                 Text(
-                    text = "Login to download private content",
+                    text = stringResource(R.string.login_to_download),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -62,7 +64,7 @@ fun CookiesScreen(
                 containerColor = Accent,
                 contentColor = Color.White,
             ) {
-                Icon(Icons.Filled.Add, contentDescription = "Add cookie", modifier = Modifier.size(20.dp))
+                Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add_cookie), modifier = Modifier.size(20.dp))
             }
         }
 
@@ -80,7 +82,7 @@ fun CookiesScreen(
             ) {
                 Icon(Icons.Outlined.Info, null, tint = Accent, modifier = Modifier.size(20.dp))
                 Text(
-                    text = "Cookies let yt-dlp access your accounts to download members-only or private content. Export cookies in Netscape format from your browser.",
+                    text = stringResource(R.string.cookie_info),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     lineHeight = 18.sp,
@@ -102,12 +104,12 @@ fun CookiesScreen(
                 Text(text = "🍪", fontSize = 64.sp)
                 Spacer(Modifier.height(16.dp))
                 Text(
-                    text = "No cookie profiles",
+                    text = stringResource(R.string.cookie_none_added),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    text = "Add a profile to download private content",
+                    text = stringResource(R.string.cookie_add_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                 )
@@ -119,7 +121,7 @@ fun CookiesScreen(
                 ) {
                     Icon(Icons.Filled.Add, null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Add Cookie Profile")
+                    Text(stringResource(R.string.add_cookie))
                 }
             }
         } else {
@@ -188,7 +190,7 @@ private fun CookieItem(
                 )
                 if (profile.isActive) {
                     Text(
-                        text = "● Active",
+                        text = stringResource(R.string.active_dot),
                         style = MaterialTheme.typography.labelSmall,
                         color = SuccessColor,
                         fontWeight = FontWeight.Medium,
@@ -210,7 +212,7 @@ private fun CookieItem(
             IconButton(onClick = onDelete) {
                 Icon(
                     Icons.Outlined.Delete,
-                    contentDescription = "Delete",
+                    contentDescription = stringResource(R.string.delete),
                     tint = ErrorColor,
                 )
             }
@@ -231,15 +233,15 @@ private fun AddCookieDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text("Add Cookie Profile", fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.add_cookie), fontWeight = FontWeight.Bold)
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Profile Name") },
-                    placeholder = { Text("e.g. YouTube, Instagram") },
+                    label = { Text(stringResource(R.string.profile_name)) },
+                    placeholder = { Text(stringResource(R.string.profile_name_hint)) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -250,8 +252,8 @@ private fun AddCookieDialog(
                 OutlinedTextField(
                     value = url,
                     onValueChange = { url = it },
-                    label = { Text("Site URL") },
-                    placeholder = { Text("https://youtube.com") },
+                    label = { Text(stringResource(R.string.cookie_url)) },
+                    placeholder = { Text(stringResource(R.string.site_url_hint)) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -262,8 +264,8 @@ private fun AddCookieDialog(
                 OutlinedTextField(
                     value = content,
                     onValueChange = { content = it },
-                    label = { Text("Cookie Content (Netscape format)") },
-                    placeholder = { Text("# Netscape HTTP Cookie File\n...") },
+                    label = { Text(stringResource(R.string.cookie_content)) },
+                    placeholder = { Text(stringResource(R.string.cookie_content_hint)) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(120.dp),
@@ -281,11 +283,11 @@ private fun AddCookieDialog(
                 colors = ButtonDefaults.buttonColors(containerColor = Accent),
                 shape = RoundedCornerShape(10.dp),
             ) {
-                Text("Save")
+                Text(stringResource(R.string.save))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
         },
         containerColor = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(20.dp),
