@@ -2,9 +2,12 @@ package com.mediawave.downloader.ui.screens.home
 
 import android.content.ClipboardManager
 import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mediawave.downloader.R
 import com.mediawave.downloader.data.model.*
+import com.mediawave.downloader.util.BackupManager
 import com.mediawave.downloader.util.LocaleHelper
 import com.mediawave.downloader.data.repository.DownloadRepository
 import com.mediawave.downloader.data.repository.UserPreferences
@@ -19,10 +22,8 @@ import javax.inject.Inject
 
 data class HomeUiState(
     val urlInput: String = "",
-    val isDownloading: Boolean = false,
     val showQualityDialog: Boolean = false,
     val snackbarMessage: String? = null,
-    val activeDownload: ActiveDownload? = null,
     val ytdlpVersion: String = "Unknown",
     val isUpdatingYtdlp: Boolean = false,
 )
@@ -33,6 +34,7 @@ class HomeViewModel @Inject constructor(
     private val downloadManager: DownloadManager,
     private val repository: DownloadRepository,
     private val prefs: UserPreferences,
+    private val backupManager: BackupManager,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -80,9 +82,17 @@ class HomeViewModel @Inject constructor(
     }
 
     fun showQualityDialog() {
-        if (_uiState.value.urlInput.isNotBlank()) {
-            _uiState.update { it.copy(showQualityDialog = true) }
+        val url = _uiState.value.urlInput.trim()
+        if (url.isBlank()) return
+        
+        // Prevent starting the same URL if it's already downloading
+        val isAlreadyDownloading = activeDownloads.value.values.any { it.url == url }
+        if (isAlreadyDownloading) {
+            _uiState.update { it.copy(snackbarMessage = "⚠️ Це посилання вже завантажується") }
+            return
         }
+        
+        _uiState.update { it.copy(showQualityDialog = true) }
     }
 
     fun dismissQualityDialog() {
@@ -93,14 +103,16 @@ class HomeViewModel @Inject constructor(
         val url = _uiState.value.urlInput.trim()
         if (url.isBlank()) return
 
-        _uiState.update { it.copy(showQualityDialog = false, isDownloading = true) }
+        // Final duplicate check
+        if (activeDownloads.value.values.any { it.url == url }) return
 
-        // Start foreground service so download survives when app is backgrounded
+        // Clear input immediately to allow next one
+        _uiState.update { it.copy(showQualityDialog = false, urlInput = "") }
+
         DownloadService.start(context)
-        var pendingRecordId = -1L
 
         viewModelScope.launch(Dispatchers.IO) {
-            pendingRecordId = repository.insertDownload(
+            val pendingRecordId = repository.insertDownload(
                 DownloadRecord(
                     title = url.substringAfterLast("/"),
                     author = "",
@@ -118,45 +130,27 @@ class HomeViewModel @Inject constructor(
                 url = url,
                 quality = quality,
                 cookieProfile = activeCookie,
-                onProgress = { download ->
-                    _uiState.update { it.copy(activeDownload = download) }
-                },
+                dbRecordId = pendingRecordId,
+                onProgress = { },
                 onComplete = { filePath, title, author, thumbnail, extractor ->
                     viewModelScope.launch {
                         repository.updateRecord(
                             id = pendingRecordId,
-                            title = title.ifBlank { url.substringAfterLast("/") },
-                            author = author.ifBlank { "Unknown" },
+                            title = title,
+                            author = author,
                             thumbnailUrl = thumbnail,
                             filePath = filePath,
                             extractor = extractor,
                             status = DownloadStatus.COMPLETED,
                         )
                     }
-                    _uiState.update {
-                        it.copy(
-                            isDownloading = false,
-                            activeDownload = null,
-                            urlInput = "",
-                            snackbarMessage = "✅ Завантаження завершено!",
-                        )
-                    }
-                    DownloadService.stop(context)
+                    _uiState.update { it.copy(snackbarMessage = context.getString(R.string.msg_download_complete)) }
+                    if (downloadManager.activeDownloads.value.isEmpty()) DownloadService.stop(context)
                 },
                 onError = { error ->
-                    viewModelScope.launch {
-                        if (pendingRecordId != -1L) {
-                            repository.updateStatus(pendingRecordId, DownloadStatus.FAILED)
-                        }
-                    }
-                    _uiState.update {
-                        it.copy(
-                            isDownloading = false,
-                            activeDownload = null,
-                            snackbarMessage = "❌ $error",
-                        )
-                    }
-                    DownloadService.stop(context)
+                    viewModelScope.launch { repository.updateStatus(pendingRecordId, DownloadStatus.FAILED) }
+                    _uiState.update { it.copy(snackbarMessage = "❌ $error") }
+                    if (downloadManager.activeDownloads.value.isEmpty()) DownloadService.stop(context)
                 },
             )
         }
@@ -174,6 +168,14 @@ class HomeViewModel @Inject constructor(
                     "AUDIO" -> DownloadQuality.AUDIO_ONLY
                     else -> DownloadQuality.HD
                 }
+                
+                // Duplicate check before start
+                val url = _uiState.value.urlInput.trim()
+                if (activeDownloads.value.values.any { it.url == url }) {
+                    _uiState.update { it.copy(snackbarMessage = "⚠️ Це посилання вже завантажується") }
+                    return@launch
+                }
+                
                 startDownload(quality)
             }
         }
@@ -181,68 +183,48 @@ class HomeViewModel @Inject constructor(
 
     fun cancelDownload(downloadId: String) {
         downloadManager.cancelDownload(downloadId)
-        _uiState.update { it.copy(isDownloading = false, activeDownload = null) }
-        DownloadService.stop(context)
+        if (downloadManager.activeDownloads.value.isEmpty()) DownloadService.stop(context)
     }
 
     fun deleteDownload(record: DownloadRecord) {
-        viewModelScope.launch {
-            repository.deleteDownload(record)
-        }
+        viewModelScope.launch { repository.deleteDownload(record) }
     }
 
     fun clearHistory() {
-        viewModelScope.launch {
-            repository.clearHistory()
-        }
+        viewModelScope.launch { repository.clearHistory() }
     }
 
     fun addCookie(name: String, url: String, content: String) {
-        viewModelScope.launch {
-            repository.insertCookie(CookieProfile(name = name, url = url, content = content))
-        }
+        viewModelScope.launch { repository.insertCookie(CookieProfile(name = name, url = url, content = content)) }
     }
 
     fun deleteCookie(profile: CookieProfile) {
-        viewModelScope.launch {
-            repository.deleteCookie(profile)
-        }
+        viewModelScope.launch { repository.deleteCookie(profile) }
     }
 
     fun setActiveCookie(id: Int) {
-        viewModelScope.launch {
-            repository.setActiveCookie(id)
-        }
+        viewModelScope.launch { repository.setActiveCookie(id) }
     }
 
     fun deactivateAllCookies() {
-        viewModelScope.launch {
-            repository.deactivateAllCookies()
-        }
+        viewModelScope.launch { repository.deactivateAllCookies() }
     }
 
-    /**
-     * Toggle a single cookie profile on/off independently.
-     * Multiple profiles can be active at the same time; the downloader
-     * picks the one whose URL domain matches the download URL.
-     */
     fun toggleCookie(id: Int, enabled: Boolean) {
-        viewModelScope.launch {
-            repository.toggleCookie(id, enabled)
-        }
+        viewModelScope.launch { repository.toggleCookie(id, enabled) }
     }
 
     fun updateYtdlp() {
         viewModelScope.launch {
             _uiState.update { it.copy(isUpdatingYtdlp = true) }
             val version = downloadManager.updateYtdlp { newVersion ->
-                prefs.let { viewModelScope.launch { it.setYtdlpVersion(newVersion) } }
+                viewModelScope.launch { prefs.setYtdlpVersion(newVersion) }
             }
             _uiState.update {
                 it.copy(
                     isUpdatingYtdlp = false,
                     ytdlpVersion = version,
-                    snackbarMessage = "yt-dlp оновлено: $version",
+                    snackbarMessage = context.getString(R.string.ytdlp_updated, version),
                 )
             }
         }
@@ -269,9 +251,29 @@ class HomeViewModel @Inject constructor(
     }
 
     fun setLanguage(code: String) {
-        // Save to DataStore (for display in Settings)
         viewModelScope.launch { prefs.setLanguage(code) }
-        // Also save to SharedPreferences so attachBaseContext can read it on next launch
         LocaleHelper.saveLang(context, code)
+    }
+
+    fun exportBackup(uri: Uri) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                backupManager.exportToFile(uri)
+                _uiState.update { it.copy(snackbarMessage = context.getString(R.string.msg_backup_saved)) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(snackbarMessage = context.getString(R.string.msg_backup_export_error, e.message)) }
+            }
+        }
+    }
+
+    fun importBackup(uri: Uri) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val success = backupManager.importFromFile(uri)
+            if (success) {
+                _uiState.update { it.copy(snackbarMessage = context.getString(R.string.msg_backup_restored)) }
+            } else {
+                _uiState.update { it.copy(snackbarMessage = context.getString(R.string.msg_backup_import_error)) }
+            }
+        }
     }
 }

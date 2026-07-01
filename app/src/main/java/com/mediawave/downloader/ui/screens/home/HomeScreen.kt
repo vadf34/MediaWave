@@ -124,7 +124,7 @@ fun HomeScreen(
                     )
 
                     DownloadButton(
-                        isDownloading = uiState.isDownloading,
+                        isDownloading = false, // Always allow clicking if URL is entered
                         onClick = {
                             keyboardController?.hide()
                             viewModel.quickDownload()
@@ -381,7 +381,7 @@ private fun UrlInputCard(
 private fun DownloadButton(isDownloading: Boolean, onClick: () -> Unit) {
     Button(
         onClick = onClick,
-        enabled = !isDownloading,
+        enabled = true, // Always enabled
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp),
@@ -392,19 +392,9 @@ private fun DownloadButton(isDownloading: Boolean, onClick: () -> Unit) {
         ),
         elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp),
     ) {
-        if (isDownloading) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(20.dp),
-                color = Color.White,
-                strokeWidth = 2.dp,
-            )
-            Spacer(Modifier.width(8.dp))
-            Text(stringResource(R.string.downloading).uppercase(), fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-        } else {
-            Icon(Icons.Filled.Download, contentDescription = null, modifier = Modifier.size(20.dp))
-            Spacer(Modifier.width(8.dp))
-            Text(stringResource(R.string.download).uppercase(), fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-        }
+        Icon(Icons.Filled.Download, contentDescription = null, modifier = Modifier.size(20.dp))
+        Spacer(Modifier.width(8.dp))
+        Text(stringResource(R.string.download).uppercase(), fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
     }
 }
 
