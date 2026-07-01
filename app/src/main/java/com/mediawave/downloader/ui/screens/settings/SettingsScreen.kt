@@ -1,5 +1,7 @@
 package com.mediawave.downloader.ui.screens.settings
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -38,6 +40,16 @@ fun SettingsScreen(
 
     val activity = LocalContext.current as? android.app.Activity
     var showLangDialog by remember { mutableStateOf(false) }
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json"),
+        onResult = { uri -> uri?.let { viewModel.exportBackup(it) } }
+    )
+
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+        onResult = { uri -> uri?.let { viewModel.importBackup(it) } }
+    )
 
     if (showLangDialog) {
         LanguageDialog(
@@ -161,6 +173,22 @@ fun SettingsScreen(
                         }
                     },
                     onClick = { if (!uiState.isUpdatingYtdlp) viewModel.updateYtdlp() },
+                )
+            }
+
+            // Backup Section
+            SettingsSection(title = stringResource(R.string.backup).uppercase()) {
+                ActionSettingItem(
+                    icon = Icons.Outlined.FileUpload,
+                    label = stringResource(R.string.export_data),
+                    description = stringResource(R.string.export_data_desc),
+                    onClick = { exportLauncher.launch("mediawave_backup.json") },
+                )
+                ActionSettingItem(
+                    icon = Icons.Outlined.FileDownload,
+                    label = stringResource(R.string.import_data),
+                    description = stringResource(R.string.import_data_desc),
+                    onClick = { importLauncher.launch(arrayOf("application/json", "application/octet-stream", "*/*")) },
                 )
             }
 
