@@ -5,26 +5,29 @@ import android.media.MediaScannerConnection
 import android.os.Build
 import android.os.Environment
 import android.webkit.MimeTypeMap
+import com.mediawave.downloader.R
 import com.mediawave.downloader.data.model.ActiveDownload
 import com.mediawave.downloader.data.model.CookieProfile
 import com.mediawave.downloader.data.model.DownloadQuality
 import com.mediawave.downloader.data.model.DownloadStatus
-import com.yausername.youtubedl_android.YoutubeDL
-import com.yausername.youtubedl_android.YoutubeDLRequest
-import com.yausername.youtubedl_android.YoutubeDLResponse
 import com.yausername.aria2c.Aria2c
 import com.yausername.ffmpeg.FFmpeg
+import com.yausername.youtubedl_android.YoutubeDL
+import com.yausername.youtubedl_android.YoutubeDLRequest
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
 import java.io.File
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
-import org.json.JSONObject
 
 @Singleton
 class DownloadManager @Inject constructor(
@@ -34,6 +37,7 @@ class DownloadManager @Inject constructor(
     val activeDownloads: StateFlow<Map<String, ActiveDownload>> = _activeDownloads.asStateFlow()
 
     private var isInitialized = false
+    private val downloadSemaphore = Semaphore(permits = 5)
 
     fun init() {
         if (isInitialized) return
@@ -60,12 +64,7 @@ class DownloadManager @Inject constructor(
             try {
                 val result = YoutubeDL.getInstance().updateYoutubeDL(context)
                 when (result) {
-                    YoutubeDL.UpdateStatus.DONE -> {
-                        val version = getYtdlpVersion()
-                        onProgress(version)
-                        version
-                    }
-                    YoutubeDL.UpdateStatus.ALREADY_UP_TO_DATE -> {
+                    YoutubeDL.UpdateStatus.DONE, YoutubeDL.UpdateStatus.ALREADY_UP_TO_DATE -> {
                         val version = getYtdlpVersion()
                         onProgress(version)
                         version
@@ -82,200 +81,147 @@ class DownloadManager @Inject constructor(
         url: String,
         quality: DownloadQuality,
         cookieProfile: CookieProfile? = null,
+        dbRecordId: Long? = null,
         onProgress: (ActiveDownload) -> Unit,
         onComplete: (filePath: String, title: String, author: String, thumbnail: String, extractor: String) -> Unit,
         onError: (String) -> Unit,
     ) = withContext(Dispatchers.IO) {
-        val downloadId = UUID.randomUUID().toString()
-
-        val outputDir = getOutputDirectory(quality)
-        val dirCreated = outputDir.mkdirs() || outputDir.exists()
-
-        if (!dirCreated || !outputDir.canWrite()) {
-            onError("Немає доступу до сховища. Надайте дозвіл у налаштуваннях.")
-            return@withContext
-        }
-
-        // Use absolute path directly in -o (most reliable with youtubedl-android)
-        val outputTemplate = "${outputDir.absolutePath}/%(uploader)s - %(title)s.%(ext)s"
-
-        val request = YoutubeDLRequest(url).apply {
-            // Format selection
-            when (quality) {
-                DownloadQuality.HD -> addOption(
-                    "-f",
-                    "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best[ext=mp4]/best",
-                )
-                DownloadQuality.SD -> addOption(
-                    "-f",
-                    "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720]/best",
-                )
-                DownloadQuality.AUDIO_ONLY -> {
-                    addOption("-f", "bestaudio/best")
-                    addOption("-x")
-                    addOption("--audio-format", "mp3")
-                    addOption("--audio-quality", "0")
-                }
+        downloadSemaphore.withPermit {
+            val downloadId = UUID.randomUUID().toString()
+            val outputDir = getOutputDirectory(quality)
+            if (!outputDir.exists() && !outputDir.mkdirs()) {
+                onError(context.getString(R.string.error_no_storage_permission))
+                return@withContext
             }
 
-            // Output — absolute path in template (most stable approach)
-            addOption("-o", outputTemplate)
+            // Filename template with limits to avoid Errno 36
+            val outputTemplate = "${outputDir.absolutePath}/%(uploader).50s - %(title).100s.%(ext)s"
 
-            // Merge output to mp4 for video
-            if (quality != DownloadQuality.AUDIO_ONLY) {
-                addOption("--merge-output-format", "mp4")
-            }
-
-            // Metadata
-            addOption("--add-metadata")
-            addOption("--no-playlist")
-
-            // Aria2c for faster parallel downloading (simple args, no shell quoting)
-            addOption("--downloader", "aria2c")
-            addOption("--downloader-args", "aria2c:-x 16 -s 16 -k 1M")
-
-            // Cookies support
-            cookieProfile?.let { cookie ->
-                val cookieFile = createTempCookieFile(cookie.content)
-                addOption("--cookies", cookieFile.absolutePath)
-            }
-
-            // Retries
-            addOption("--retries", "3")
-            addOption("--fragment-retries", "3")
-
-            // Suppress non-fatal warnings in output parsing
-            addOption("--no-warnings")
-            addOption("--print-json")
-        }
-
-        val initialDownload = ActiveDownload(
-            id = downloadId,
-            url = url,
-            title = "Отримуємо інформацію...",
-            progress = 0f,
-            speed = "",
-            eta = "",
-            status = DownloadStatus.DOWNLOADING,
-            quality = quality,
-        )
-
-        updateActiveDownload(downloadId, initialDownload)
-        onProgress(initialDownload)
-
-        try {
-            var lastTitle = ""
-            var lastAuthor = ""
-            var lastThumbnail = ""
-            var lastExtractor = ""
-
-            YoutubeDL.getInstance().execute(
-                request,
-                downloadId,
-            ) { progress, etaInSeconds, line ->
-                // Parse title/author from Destination line
-                if (line.contains("[download]") && line.contains("Destination:")) {
-                    val fileName = line.substringAfterLast("/").substringBeforeLast(".")
-                    if (fileName.contains(" - ")) {
-                        lastAuthor = fileName.substringBefore(" - ").trim()
-                        lastTitle = fileName.substringAfter(" - ").trim()
-                    } else {
-                        lastTitle = fileName.trim()
+            val request = YoutubeDLRequest(url).apply {
+                addOption("--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+                
+                when (quality) {
+                    DownloadQuality.HD -> addOption("-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best")
+                    DownloadQuality.SD -> addOption("-f", "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720]/best")
+                    DownloadQuality.AUDIO_ONLY -> {
+                        addOption("-f", "bestaudio/best")
+                        addOption("-x")
+                        addOption("--audio-format", "mp3")
+                        addOption("--audio-quality", "0")
                     }
                 }
 
-                // Parse thumbnail and extractor from JSON metadata line
-                if (line.trim().startsWith("{")) {
-                    try {
-                        val json = JSONObject(line.trim())
-                        if (lastThumbnail.isBlank()) {
-                            val thumb = json.optString("thumbnail", "")
-                            if (thumb.isNotBlank()) {
-                                lastThumbnail = thumb
-                            } else {
-                                val arr = json.optJSONArray("thumbnails")
-                                if (arr != null && arr.length() > 0) {
-                                    lastThumbnail = arr.getJSONObject(arr.length() - 1).optString("url", "")
+                addOption("-o", outputTemplate)
+                if (quality != DownloadQuality.AUDIO_ONLY) addOption("--merge-output-format", "mp4")
+                
+                addOption("--add-metadata")
+                addOption("--no-playlist")
+                addOption("--newline") // Crucial for progress parsing
+                addOption("--progress") // Force progress output
+                addOption("--print-json") // RESTORED for thumbnails
+                
+                cookieProfile?.let { addOption("--cookies", createTempCookieFile(it.content).absolutePath) }
+
+                addOption("--retries", "10")
+                addOption("--fragment-retries", "10")
+                addOption("--trim-file-name", "120")
+                addOption("--no-warnings")
+            }
+
+            val initialDownload = ActiveDownload(
+                id = downloadId, url = url, title = context.getString(R.string.status_getting_info),
+                progress = 0f, speed = "", eta = "", status = DownloadStatus.DOWNLOADING,
+                quality = quality, dbRecordId = dbRecordId
+            )
+            updateActiveDownload(downloadId, initialDownload)
+
+            var attempt = 0
+            val maxAttempts = 3
+            while (attempt < maxAttempts) {
+                attempt++
+                try {
+                    var lastTitle = ""
+                    var lastAuthor = ""
+                    var lastThumbnail = ""
+                    var lastExtractor = ""
+                    var isAudioPart = false
+
+                    YoutubeDL.getInstance().execute(request, downloadId) { progress, etaInSeconds, line ->
+                        // 1. Parsing Metadata from JSON line
+                        if (line.trim().startsWith("{")) {
+                            try {
+                                val json = JSONObject(line.trim())
+                                if (lastTitle.isBlank()) lastTitle = json.optString("title", json.optString("fulltitle", ""))
+                                if (lastAuthor.isBlank()) lastAuthor = json.optString("uploader", json.optString("channel", "Unknown"))
+                                if (lastThumbnail.isBlank()) {
+                                    val thumb = json.optString("thumbnail", "")
+                                    if (thumb.isNotBlank()) lastThumbnail = thumb
+                                    else {
+                                        val arr = json.optJSONArray("thumbnails")
+                                        if (arr != null && arr.length() > 0) {
+                                            lastThumbnail = arr.getJSONObject(arr.length() - 1).optString("url", "")
+                                        }
+                                    }
                                 }
-                            }
+                                if (lastExtractor.isBlank()) lastExtractor = json.optString("extractor_key", json.optString("extractor", "Unknown"))
+                            } catch (_: Exception) {}
                         }
-                        if (lastExtractor.isBlank()) {
-                            lastExtractor = json.optString("extractor_key", json.optString("extractor", ""))
+
+                        // 2. Detection of Audio part to prevent 0-100% reset
+                        if (line.contains("Destination:") && (line.contains(".m4a") || line.contains(".mp3") || line.contains("audio"))) {
+                            isAudioPart = true
                         }
-                        if (lastTitle.isBlank()) {
-                            lastTitle = json.optString("title", json.optString("fulltitle", ""))
+
+                        // 3. Parsing Speed
+                        val speedRegex = Regex("""([\d.]+\s*[KMGk]iB/s)""")
+                        val speed = speedRegex.find(line)?.groupValues?.get(1) ?: ""
+
+                        // 4. Parsing ETA
+                        val eta = if (etaInSeconds > 0) {
+                            val m = etaInSeconds / 60
+                            val s = etaInSeconds % 60
+                            if (m > 0) "${m}${context.getString(R.string.time_min)} ${s}${context.getString(R.string.time_sec)}"
+                            else "${s}${context.getString(R.string.time_sec)}"
+                        } else ""
+
+                        // 5. Smooth Progress (Video 90%, Audio 10%)
+                        val adjustedProgress = if (quality == DownloadQuality.AUDIO_ONLY) {
+                            progress / 100f
+                        } else {
+                            if (!isAudioPart) (progress * 0.9f) / 100f
+                            else (90f + (progress * 0.1f)) / 100f
                         }
-                        if (lastAuthor.isBlank()) {
-                            lastAuthor = json.optString("uploader", json.optString("channel", ""))
-                        }
-                    } catch (_: Exception) {}
+
+                        // 6. Update state
+                        val displayTitle = if (lastTitle.isNotBlank()) lastTitle else initialDownload.title
+                        val activeDownload = initialDownload.copy(
+                            title = displayTitle,
+                            progress = adjustedProgress.coerceIn(0f, 1f),
+                            speed = speed,
+                            eta = eta
+                        )
+                        updateActiveDownload(downloadId, activeDownload)
+                        onProgress(activeDownload)
+                    }
+
+                    val downloadedFile = findLatestFile(outputDir)
+                    removeActiveDownload(downloadId)
+
+                    if (downloadedFile != null) {
+                        val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(downloadedFile.extension)
+                            ?: if (quality == DownloadQuality.AUDIO_ONLY) "audio/mpeg" else "video/mp4"
+                        MediaScannerConnection.scanFile(context, arrayOf(downloadedFile.absolutePath), arrayOf(mimeType), null)
+                        onComplete(downloadedFile.absolutePath, lastTitle.ifBlank { downloadedFile.nameWithoutExtension }, lastAuthor, lastThumbnail, lastExtractor)
+                        return@withPermit
+                    } else throw Exception(context.getString(R.string.error_file_not_found))
+                } catch (e: Exception) {
+                    if (attempt >= maxAttempts || e.message?.contains("Operation not permitted") == true) {
+                        removeActiveDownload(downloadId)
+                        onError(e.message ?: context.getString(R.string.error_download_failed))
+                        return@withPermit
+                    }
+                    delay(2000L * attempt)
                 }
-
-                val speedRegex = Regex("""([\d.]+\s*[KMGk]iB/s)""")
-                val speed = speedRegex.find(line)?.groupValues?.get(1) ?: ""
-
-                val eta = if (etaInSeconds > 0) {
-                    val m = etaInSeconds / 60
-                    val s = etaInSeconds % 60
-                    if (m > 0) "${m}хв ${s}с" else "${s}с"
-                } else ""
-
-                val displayTitle = when {
-                    lastTitle.isNotBlank() -> lastTitle
-                    line.contains("Extracting URL") || line.contains("Downloading webpage") -> "Отримуємо посилання..."
-                    line.contains("[download]") -> "Завантажуємо..."
-                    else -> "Завантажуємо..."
-                }
-
-                val activeDownload = ActiveDownload(
-                    id = downloadId,
-                    url = url,
-                    title = displayTitle,
-                    progress = (progress / 100f).coerceIn(0f, 1f),
-                    speed = speed,
-                    eta = eta,
-                    status = DownloadStatus.DOWNLOADING,
-                    quality = quality,
-                )
-                updateActiveDownload(downloadId, activeDownload)
-                onProgress(activeDownload)
-            }
-
-            // Find the downloaded file (most recently modified in dir)
-            val downloadedFile = findLatestFile(outputDir)
-            removeActiveDownload(downloadId)
-
-            if (downloadedFile != null) {
-                // Notify MediaStore so file appears in Gallery immediately
-                val mimeType = MimeTypeMap.getSingleton()
-                    .getMimeTypeFromExtension(downloadedFile.extension)
-                    ?: if (quality == DownloadQuality.AUDIO_ONLY) "audio/mpeg" else "video/mp4"
-                MediaScannerConnection.scanFile(
-                    context,
-                    arrayOf(downloadedFile.absolutePath),
-                    arrayOf(mimeType),
-                    null,
-                )
-                onComplete(
-                    downloadedFile.absolutePath,
-                    lastTitle.ifBlank { downloadedFile.nameWithoutExtension },
-                    lastAuthor.ifBlank { "Unknown" },
-                    lastThumbnail,
-                    lastExtractor,
-                )
-            } else {
-                onError("Файл не знайдено після завантаження")
-            }
-        } catch (e: Exception) {
-            removeActiveDownload(downloadId)
-            val msg = e.message ?: "Помилка завантаження"
-            when {
-                msg.contains("Errno 1") || msg.contains("Operation not permitted") ->
-                    onError("Немає доступу до сховища. Перевірте дозволи у налаштуваннях.")
-                msg.contains("ERROR:") ->
-                    onError(msg.substringAfter("ERROR:").trim())
-                else ->
-                    onError(msg)
             }
         }
     }
@@ -284,33 +230,17 @@ class DownloadManager @Inject constructor(
         try {
             YoutubeDL.getInstance().destroyProcessById(downloadId)
             removeActiveDownload(downloadId)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        } catch (_: Exception) {}
     }
 
-    /**
-     * Returns writable output directory.
-     * Android 11+: uses public dir if MANAGE_EXTERNAL_STORAGE granted, else app-specific.
-     * Android 10 and below: always public dir.
-     */
     fun getOutputDirectory(quality: DownloadQuality): File {
         val subDir = "MediaWave"
-        val mediaType = if (quality == DownloadQuality.AUDIO_ONLY)
-            Environment.DIRECTORY_MUSIC
-        else
-            Environment.DIRECTORY_MOVIES
-
+        val mediaType = if (quality == DownloadQuality.AUDIO_ONLY) Environment.DIRECTORY_MUSIC else Environment.DIRECTORY_MOVIES
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            if (Environment.isExternalStorageManager()) {
-                File(Environment.getExternalStoragePublicDirectory(mediaType), subDir)
-            } else {
-                // Always writable without extra permissions
-                File(context.getExternalFilesDir(mediaType), subDir)
-            }
-        } else {
-            File(Environment.getExternalStoragePublicDirectory(mediaType), subDir)
-        }
+
+            if (Environment.isExternalStorageManager()) File(Environment.getExternalStoragePublicDirectory(mediaType), subDir)
+            else File(context.getExternalFilesDir(mediaType), subDir)
+        } else File(Environment.getExternalStoragePublicDirectory(mediaType), subDir)
     }
 
     private fun createTempCookieFile(content: String): File {

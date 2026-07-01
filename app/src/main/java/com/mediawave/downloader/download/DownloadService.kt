@@ -149,7 +149,7 @@ class DownloadService : Service() {
                     },
                 )
             } catch (e: Exception) {
-                notifyDownloadError(e.message ?: "Помилка завантаження")
+                notifyDownloadError(e.message ?: getString(R.string.download_failed))
                 stopSelf()
             }
         }
@@ -169,7 +169,7 @@ class DownloadService : Service() {
         )
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID_COMPLETE)
-            .setContentTitle("✅ Завантаження завершено")
+            .setContentTitle(getString(R.string.download_complete))
             .setContentText(title)
             .setSmallIcon(android.R.drawable.stat_sys_download_done)
             .setContentIntent(pendingIntent)
@@ -192,7 +192,7 @@ class DownloadService : Service() {
         )
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID_COMPLETE)
-            .setContentTitle("❌ Помилка завантаження")
+            .setContentTitle(getString(R.string.download_failed))
             .setContentText(error)
             .setSmallIcon(android.R.drawable.stat_notify_error)
             .setContentIntent(pendingIntent)
