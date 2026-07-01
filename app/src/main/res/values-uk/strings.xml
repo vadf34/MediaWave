@@ -28,7 +28,7 @@
     <string name="ask_quality">Вибір якості перед завантаженням</string>
     <string name="ask_quality_desc">Показувати діалог якості якщо доступно HD</string>
     <string name="update_ytdlp">Оновити yt-dlp</string>
-    <string name="ytdlp_updated">yt-dlp успішно оновлено</string>
+    <string name="ytdlp_updated">yt-dlp оновлено: %s</string>
     <string name="ytdlp_up_to_date">yt-dlp вже актуальний</string>
     <string name="cookie_profiles">Cookie Профілі</string>
     <string name="add_cookie">Додати Cookie профіль</string>
@@ -64,8 +64,21 @@
     <string name="cookie_active_for_url">🍪 Cookie: %s</string>
     <string name="cookie_none_for_url">Немає cookie профілю для цього сайту</string>
     <string name="cookie_none_added">Cookie профілі відсутні</string>
-    <string name="cookie_none_added_desc">Натисніть «Управління» щоб додати профіль</string>
+    <string name="cookie_add_desc">Додайте профіль для завантаження приватного контенту</string>
+    <string name="profile_name">Назва профілю</string>
+    <string name="profile_name_hint">напр. YouTube, Instagram</string>
+    <string name="site_url_hint">https://youtube.com</string>
+    <string name="cookie_content_hint"># Netscape HTTP Cookie File\n…</string>
+    <string name="active_dot">● Активний</string>
     <string name="cookie_manage">Управління профілями</string>
+    <string name="error_file_not_found">Файл не знайдено після завантаження</string>
+    <string name="error_no_storage_permission">Немає доступу до сховища. Надайте дозвіл у налаштуваннях.</string>
+    <string name="error_download_failed">Помилка завантаження</string>
+    <string name="status_fetching_link">Отримуємо посилання…</string>
+    <string name="status_getting_info">Отримуємо інформацію…</string>
+    <string name="status_downloading">Завантажуємо…</string>
+    <string name="time_min">хв</string>
+    <string name="time_sec">с</string>
 
     <!-- Profile Parser -->
     <string name="profile_parser_title">Парсер профілю</string>
@@ -92,4 +105,35 @@
     <string name="profile_add_site">Додати сайт</string>
     <string name="profile_site_name_label">Назва сайту</string>
     <string name="profile_site_domain_label">Домен</string>
+    <string name="msg_download_complete">✅ Завантаження завершено!</string>
+    <string name="msg_backup_saved">✅ Бекап збережено</string>
+    <string name="msg_backup_export_error">❌ Помилка експорту: %s</string>
+    <string name="msg_backup_restored">✅ Дані відновлено</string>
+    <string name="msg_backup_import_error">❌ Помилка імпорту</string>
+    <string name="backup">Резервне копіювання</string>
+    <string name="export_data">Експортувати дані</string>
+    <string name="export_data_desc">Зберегти історію, куки та налаштування у файл JSON</string>
+    <string name="import_data">Імпортувати дані</string>
+    <string name="import_data_desc">Відновити дані з раніше експортованого файлу JSON</string>
+    <string name="clear_history">Очистити історію</string>
+    <string name="clear_history_desc">Це видалить усі записи про завантаження. Файли на диску залишаться.</string>
+    <string name="clear_all">Очистити все</string>
+    <string name="copy_source_link">Копіювати джерело</string>
+    <string name="share_file">Поділитись файлом</string>
+    <string name="remove_from_history">Видалити з історії</string>
+    <string name="no_history_desc">Ваша історія завантажень з\'явиться тут</string>
+    <string name="share_via">Поділитись через</string>
+    <string name="error">Помилка</string>
+    <string name="profile_selected_count">%1$d вибрано з %2$d</string>
+    <string name="profile_media_count">%d медіа</string>
+    <string name="no_title">Без назви</string>
+    <string name="views_format_m">%.1fM перегл.</string>
+    <string name="views_format_k">%.0fK перегл.</string>
+    <string name="views_format">%d перегл.</string>
+    <string name="profile_input_hint_extended">нікнейм, @нікнейм або посилання</string>
+    <string name="profile_help_example_username">\@username  → оберіть соцмережу</string>
+    <string name="profile_help_example_nickname">нікнейм   → оберіть соцмережу</string>
+    <string name="account">акаунт</string>
+    <string name="site_name_hint">напр. Dailymotion</string>
+    <string name="domain_hint">dailymotion.com</string>
 </resources>
